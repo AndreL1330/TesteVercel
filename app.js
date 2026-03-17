@@ -6,10 +6,10 @@ const app = express();
 
 // Configuração da conexão com Postgres
 const pool = new Pool({
-    user: 'postgres', // Usuário padrão do Postgres
+    user: 'andrelucastj9@gmail.com', // Usuário padrão do Postgres
     host: 'localhost',
     database: 'pedraForte',
-    password: 'SuaSenhaAqui', // Altere para a sua senha
+    password: '@Golprata21', // Altere para a sua senha
     port: 5432,
 });
 
