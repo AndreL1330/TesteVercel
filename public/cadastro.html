@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Produtos</title>
+    
+    <style>
+        body { font-family: Arial; background: #f4f4f4; text-align: center; padding: 40px; }
+       
+        form { background: #fff; display: inline-block; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+      
+        input { padding: 10px; width: 250px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; }
+       
+        button { padding: 8px 14px; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+       
+        button[type="submit"] { background: #007bff; color: #fff; }
+       
+        button.buscar { background: #007bff; color: #fff; } 
+
+        button.Sair { background: #dc3545; color: #fff; margin-left: 10px; }
+        
+        button a { text-decoration: none; color: inherit; } 
+
+       
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        
+        
+        table { margin: 20px auto; border-collapse: collapse; background: #fff; width: 80%; }
+        th, td { border: 1px solid #ddd; padding: 10px; }
+        th { background: #f7f7f7; }
+    </style>
+</head>
+<body>
+
+    <form action="/salvar" method="post">
+        
+        <h2>Cadastrar Material</h2>
+
+        <Label>Nome do Material</Label>
+        <input type="text" name="nome" placeholder="Insira o nome do material" required>
+        
+        <Label>Descrição</Label>
+        <input type="text" name="descricao" placeholder="Insira a descrição do produto" required>
+        
+        <Label>Quantidade</Label>
+        <input type="number" name="quantidade" placeholder="Insira a quantidade do produto" required>
+        
+        <Label>Preço (R$)</Label>
+        <input type="text" name="preco" placeholder="Ex: 10.50" required>
+        
+        <button type="submit">Cadastrar</button>
+    </form>
+
+    <br> <button class="buscar"><a href="/materiais">Ver inventário</a></button>
+    <button class="Sair"><a href="/">Sair</a></button>
+    
+</body>
+</html>
