@@ -13,6 +13,7 @@ const pool = new Pool({
     port: 5432,
 });
 
+
 pool.on('connect', () => {
     console.log("PostgreSQL OK");
 });
