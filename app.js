@@ -8,8 +8,8 @@ const app = express();
 const pool = new Pool({
     user: 'andrelucastj9@gmail.com', // Usuário padrão do Postgres
     host: 'localhost',
-    database: 'pedraForte',
-    password: '@Golprata21', // Altere para a sua senha
+    database: 'supabase_vercel',
+    password: 'Golprata21', // Altere para a sua senha
     port: 5432,
 });
 
