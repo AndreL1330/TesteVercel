@@ -31,91 +31,67 @@ app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "login.ht
 app.get("/cadastro", (req, res) => res.sendFile(path.join(__dirname, "public", "cadastro.html")));
 app.get("/materiais", (req, res) => res.sendFile(path.join(__dirname, "public", "materiais.html")));
 
-app.post('/salvar', (req, res) => {
+// 4. LÓGICA DE NEGÓCIO (API)
+
+// Salvar Material
+app.post('/salvar', async (req, res) => {
     const { nome, descricao, quantidade, preco } = req.body;
-    const sql = 'insert into materiais (nome, descricao, quantidade, preco) values (?,?,?,?)';
-    connection.query(sql, [nome, descricao, quantidade, preco], (err) => {
-        if (err) {
-            console.error('Erro ao inserir dados:', err.message);
-            return res.send('Erro ao salvar no banco');
-        }
-        res.send('dados salvos com sucesso!');
-    });
+    const sql = 'INSERT INTO materiais (nome, descricao, quantidade, preco) VALUES ($1, $2, $3, $4)';
+    try {
+        await pool.query(sql, [nome, descricao, quantidade, preco]);
+        res.send('Dados salvos com sucesso!');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erro ao salvar no banco');
+    }
 });
 
-app.post('/autenticar', (req, res) => {
-    // Note: usamos req.body porque é um formulário POST tradicional
+// Autenticar
+app.post('/autenticar', async (req, res) => {
     const { email, senha } = req.body; 
-
-    if (!email || !senha) {
-        return res.send('Email e senha são obrigatórios.');
-    }
-
-    // AVISO DE SEGURANÇA: Esta query compara senhas puras, o que é INSEGURO. 
-    // Em produção, você deve usar hashing (como bcrypt).
-    const sql = 'SELECT id_usuario FROM usuarios WHERE email = ? AND senha = ?';
-    
-    connection.query(sql, [email, senha], (err, results) => {
-        if (err) {
-            console.error('Erro de autenticação:', err.message);
-            return res.send('Erro interno do servidor.');
-        }
-
-        if (results.length > 0) {
-
+    const sql = 'SELECT id_usuario FROM usuarios WHERE email = $1 AND senha = $2';
+    try {
+        const results = await pool.query(sql, [email, senha]);
+        if (results.rows.length > 0) {
             res.redirect('/cadastro'); 
-            
         } else {
-        
             res.send('Acesso negado. Credenciais inválidas.');
         }
-    });
+    } catch (err) {
+        res.status(500).send('Erro interno do servidor.');
+    }
 });
 
-app.get('/api/listar', (req, res) => {
-
-    const sql = 'SELECT * FROM materiais';
-
-    connection.query(sql, [], (err, results) => {
-        if (err) {
-            console.error('Erro ao listar dados:', err.message);
-            return res.status(500).json({ error: 'Erro ao listar dados' });
-        }
-        res.json(results);
-    });
+// Listar Materiais
+app.get('/api/listar', async (req, res) => {
+    try {
+        const results = await pool.query('SELECT * FROM materiais ORDER BY id_material ASC');
+        res.json(results.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao listar dados' });
+    }
 });
 
-app.get("/api/buscar", (req, res) => {
+// Buscar Material
+app.get("/api/buscar", async (req, res) => {
     const { nome } = req.query;
-    if (!nome) return res.json({ error: "Material é obrigatório." });
-    const sql = "SELECT * FROM materiais WHERE nome LIKE ?";
-    connection.query(sql, [`%${nome}%`], (err, results) => {
-        if (err) return res.status(500).json({ error: "Erro ao buscar no banco." });
-        res.json(results);
-    });
+    try {
+        const results = await pool.query("SELECT * FROM materiais WHERE nome ILIKE $1", [`%${nome}%`]);
+        res.json(results.rows);
+    } catch (err) {
+        res.status(500).json({ error: "Erro ao buscar no banco." });
+    }
 });
 
-app.put('/api/atualizar/:id_material', (req, res) => {
+// Deletar
+app.delete('/api/deletar/:id_material', async (req, res) => {
     const { id_material } = req.params;
-    const { nome, descricao, quantidade, preco } = req.body;
-    const sql = 'UPDATE materiais SET nome = ?, descricao = ?, quantidade = ?, preco = ? WHERE id_material = ?';
-    connection.query(sql, [nome, descricao, quantidade, preco, id_material], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Erro ao atualizar o material.' });
-        if (result.affectedRows === 0) return res.status(404).json({ error: 'Material não encontrado' });
-        res.json({ message: 'Material atualizado com sucesso!' });
-    });
-});
-
-
-app.delete('/api/deletar/:id_material', (req, res) => {
-    const { id_material } = req.params;
-    const sql = 'DELETE FROM materiais WHERE id_material = ?';
-    connection.query(sql, [id_material], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Erro ao excluir o material.' });
-        if (result.affectedRows === 0) return res.status(404).json({ error: 'Material não encontrado' });
+    try {
+        await pool.query('DELETE FROM materiais WHERE id_material = $1', [id_material]);
         res.json({ message: 'Material excluído com sucesso!' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao excluir.' });
+    }
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
