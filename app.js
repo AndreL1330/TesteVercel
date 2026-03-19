@@ -22,10 +22,6 @@ pool.connect((err, client, release) => {
 });
 // ------------------------------
 
-const supabase = createClient(
-    process.env.SUPABASE_URL || '', 
-    process.env.SUPABASE_ANON_KEY || ''
-);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
