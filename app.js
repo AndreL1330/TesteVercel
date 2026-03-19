@@ -31,31 +31,45 @@ app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "login.ht
 app.get("/cadastro", (req, res) => res.sendFile(path.join(__dirname, "public", "cadastro.html")));
 app.get("/materiais", (req, res) => res.sendFile(path.join(__dirname, "public", "materiais.html")));
 
-// AUTENTICAR (Com log de erro detalhado)
-app.post('/autenticar', async (req, res) => {
+app.post('/salvar', (req, res) => {
+    const { nome, descricao, quantidade, preco } = req.body;
+    const sql = 'insert into materiais (nome, descricao, quantidade, preco) values (?,?,?,?)';
+    connection.query(sql, [nome, descricao, quantidade, preco], (err) => {
+        if (err) {
+            console.error('Erro ao inserir dados:', err.message);
+            return res.send('Erro ao salvar no banco');
+        }
+        res.send('dados salvos com sucesso!');
+    });
+});
+
+app.post('/autenticar', (req, res) => {
+    // Note: usamos req.body porque é um formulário POST tradicional
     const { email, senha } = req.body; 
-    const sql = 'SELECT id_usuario FROM usuarios WHERE email = $1 AND senha = $2';
+
+    if (!email || !senha) {
+        return res.send('Email e senha são obrigatórios.');
+    }
+
+    // AVISO DE SEGURANÇA: Esta query compara senhas puras, o que é INSEGURO. 
+    // Em produção, você deve usar hashing (como bcrypt).
+    const sql = 'SELECT id_usuario FROM usuarios WHERE email = ? AND senha = ?';
     
-    try {
-        const results = await pool.query(sql, [email, senha]);
-        if (results.rows.length > 0) {
+    connection.query(sql, [email, senha], (err, results) => {
+        if (err) {
+            console.error('Erro de autenticação:', err.message);
+            return res.send('Erro interno do servidor.');
+        }
+
+        if (results.length > 0) {
+
             res.redirect('/cadastro'); 
+            
         } else {
+        
             res.send('Acesso negado. Credenciais inválidas.');
         }
-    } catch (err) {
-        console.error('❌ ERRO NA CONSULTA DE LOGIN:', err.message);
-        // Enviamos o erro real para o navegador para ajudar no debug (remova isso depois)
-        res.status(500).send(`Erro interno: ${err.message}`);
-    }
-});
-
-app.get("/cadastro", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "cadastro.html"));
-});
-
-app.get("/materiais", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "materiais.html"));
+    });
 });
 
 app.get('/api/listar', (req, res) => {
