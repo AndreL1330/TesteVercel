@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clínica Digital | Sistema de Gestão</title>
+    <title>Clínica Digital | Cadastro de Pacientes</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -15,7 +15,6 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border-color: #e2e8f0;
-            --danger: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,7 +49,7 @@
         header p { color: var(--text-muted); margin-top: 5px; }
 
         .form-section { margin-bottom: 30px; }
-        .form-section h2 { font-size: 1.1rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .form-section h2 { font-size: 1.1rem; margin-bottom: 20px; }
 
         .grid-row { display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
         .input-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
@@ -69,21 +68,22 @@
         .form-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 15px;
             padding-top: 20px;
             border-top: 1px solid var(--border-color);
         }
 
-        .btn-primary, .btn-secondary {
+        .btn-primary {
             padding: 12px 24px;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             border: none;
+            background-color: var(--primary-color);
+            color: white;
+            transition: background 0.2s;
         }
 
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-secondary { background-color: #f1f5f9; color: var(--text-muted); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
 
         .list-container {
             background-color: var(--card-bg);
@@ -94,17 +94,9 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
         th { text-align: left; padding: 12px; background: #f8fafc; color: var(--text-muted); border-bottom: 2px solid var(--border-color); }
         td { padding: 12px; border-bottom: 1px solid var(--border-color); }
-
-        .btn-delete {
-            background: none;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-weight: bold;
-        }
 
         @media (max-width: 600px) { .grid-row { flex-direction: column; } }
     </style>
@@ -114,12 +106,12 @@
     <div class="container">
         <header>
             <h1>🩺 Clínica Digital</h1>
-            <p>Conectado ao Servidor</p>
+            <p>Registro de novos pacientes</p>
         </header>
 
-        <form id="cadastroForm">
+        <form id="formCadastro">
             <section class="form-section">
-                <h2>👤 Identificação</h2>
+                <h2>Identificação</h2>
                 <div class="grid-row">
                     <div class="input-group">
                         <label for="nome">Nome Completo</label>
@@ -129,7 +121,7 @@
             </section>
 
             <section class="form-section">
-                <h2>📍 Contato</h2>
+                <h2>Contato</h2>
                 <div class="grid-row">
                     <div class="input-group">
                         <label for="email">E-mail</label>
@@ -143,21 +135,19 @@
             </section>
 
             <div class="form-actions">
-                <button type="reset" class="btn-secondary">Limpar</button>
-                <button type="submit" class="btn-primary">Salvar no Banco</button>
+                <button type="submit" class="btn-primary">Salvar Cadastro</button>
             </div>
         </form>
     </div>
 
     <div class="list-container">
-        <h2>Pacientes no Sistema</h2>
+        <h2>Pacientes Cadastrados</h2>
         <table id="tabelaPacientes">
             <thead>
                 <tr>
                     <th>Nome</th>
                     <th>E-mail</th>
                     <th>Telefone</th>
-                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody id="corpoTabela">
@@ -165,7 +155,64 @@
         </table>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        const form = document.getElementById('formCadastro');
+        const tbody = document.getElementById('corpoTabela');
 
+        // FUNÇÃO: LISTAR (Chamada ao carregar e após cadastrar)
+        async function listarPacientes() {
+            try {
+                const res = await fetch('/api/listar'); 
+                const dados = await res.json();
+                
+                tbody.innerHTML = '';
+                
+                if (dados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum paciente na lista.</td></tr>';
+                    return;
+                }
+
+                dados.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${p.nome}</td>
+                            <td>${p.email || '---'}</td>
+                            <td>${p.telefone}</td>
+                        </tr>`;
+                });
+            } catch (err) {
+                console.error("Erro ao carregar lista:", err);
+            }
+        }
+
+        // FUNÇÃO: CADASTRAR
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const novoPaciente = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                telefone: document.getElementById('telefone').value
+            };
+
+            try {
+                const res = await fetch('/api/cadastrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(novoPaciente)
+                });
+
+                if (res.ok) {
+                    form.reset();
+                    listarPacientes(); // Atualiza a tabela automaticamente
+                }
+            } catch (err) {
+                alert("Erro ao conectar com o servidor.");
+            }
+        });
+
+        // Carrega a lista assim que a página abre
+        window.onload = listarPacientes;
+    </script>
 </body>
 </html>

@@ -52,26 +52,5 @@ app.get('/api/listar', async (req, res) => {
     }
 });
 
-// Buscar Cliente
-app.get("/api/buscar", async (req, res) => {
-    const { nome } = req.query;
-    try {
-        const results = await pool.query("SELECT * FROM clientes WHERE nome ILIKE $1", [`%${nome}%`]);
-        res.json(results.rows);
-    } catch (err) {
-        res.status(500).json({ error: "Erro ao buscar no banco." });
-    }
-});
-
-// Deletar
-app.delete('/api/deletar/:id_cliente', async (req, res) => {
-    const { id_cliente } = req.params;
-    try {
-        await pool.query('DELETE FROM clientes WHERE id_cliente = $1', [id_cliente]);
-        res.json({ message: 'Cliente excluído com sucesso!' });
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao excluir.' });
-    }
-});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
