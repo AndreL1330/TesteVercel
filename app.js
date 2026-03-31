@@ -27,18 +27,14 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // ROTAS DE PÁGINAS
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "login.html")));
-app.get("/cadastro", (req, res) => res.sendFile(path.join(__dirname, "public", "cadastro.html")));
-app.get("/materiais", (req, res) => res.sendFile(path.join(__dirname, "public", "materiais.html")));
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "cadastro.html")));
 
-// 4. LÓGICA DE NEGÓCIO (API)
-
-// Salvar Material
+// Salvar Cliente
 app.post('/salvar', async (req, res) => {
-    const { nome, descricao, quantidade, preco } = req.body;
-    const sql = 'INSERT INTO materiais (nome, descricao, quantidade, preco) VALUES ($1, $2, $3, $4)';
+    const { nome, celular, email } = req.body;
+    const sql = 'INSERT INTO clientes (nome, celular, email) VALUES ($1, $2, $3)';
     try {
-        await pool.query(sql, [nome, descricao, quantidade, preco]);
+        await pool.query(sql, [nome, celular, email]);
         res.send('Dados salvos com sucesso!');
     } catch (err) {
         console.error(err);
@@ -46,37 +42,21 @@ app.post('/salvar', async (req, res) => {
     }
 });
 
-// Autenticar
-app.post('/autenticar', async (req, res) => {
-    const { email, senha } = req.body; 
-    const sql = 'SELECT id_usuario FROM usuarios WHERE email = $1 AND senha = $2';
-    try {
-        const results = await pool.query(sql, [email, senha]);
-        if (results.rows.length > 0) {
-            res.redirect('/cadastro'); 
-        } else {
-            res.send('Acesso negado. Credenciais inválidas.');
-        }
-    } catch (err) {
-        res.status(500).send('Erro interno do servidor.');
-    }
-});
-
-// Listar Materiais
+// Listar Clientes
 app.get('/api/listar', async (req, res) => {
     try {
-        const results = await pool.query('SELECT * FROM materiais ORDER BY id_material ASC');
+        const results = await pool.query('SELECT * FROM clientes ORDER BY id_cliente ASC');
         res.json(results.rows);
     } catch (err) {
         res.status(500).json({ error: 'Erro ao listar dados' });
     }
 });
 
-// Buscar Material
+// Buscar Cliente
 app.get("/api/buscar", async (req, res) => {
     const { nome } = req.query;
     try {
-        const results = await pool.query("SELECT * FROM materiais WHERE nome ILIKE $1", [`%${nome}%`]);
+        const results = await pool.query("SELECT * FROM clientes WHERE nome ILIKE $1", [`%${nome}%`]);
         res.json(results.rows);
     } catch (err) {
         res.status(500).json({ error: "Erro ao buscar no banco." });
@@ -84,11 +64,11 @@ app.get("/api/buscar", async (req, res) => {
 });
 
 // Deletar
-app.delete('/api/deletar/:id_material', async (req, res) => {
-    const { id_material } = req.params;
+app.delete('/api/deletar/:id_cliente', async (req, res) => {
+    const { id_cliente } = req.params;
     try {
-        await pool.query('DELETE FROM materiais WHERE id_material = $1', [id_material]);
-        res.json({ message: 'Material excluído com sucesso!' });
+        await pool.query('DELETE FROM clientes WHERE id_cliente = $1', [id_cliente]);
+        res.json({ message: 'Cliente excluído com sucesso!' });
     } catch (err) {
         res.status(500).json({ error: 'Erro ao excluir.' });
     }
